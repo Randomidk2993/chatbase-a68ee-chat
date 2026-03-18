@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Chat</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: white;
+        margin: 0;
+        padding: 0;
+    }
+    #chat-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 25px auto;
+        background: #1b1b1b;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    #messages {
+        height: 350px;
+        overflow-y: auto;
+        border: 1px solid #333;
+        padding: 10px;
+        border-radius: 5px;
+        background: #0e0e0e;
+    }
+    .message {
+        padding: 8px;
+        margin: 6px 0;
+        background: #222;
+        border-radius: 5px;
+    }
+    .username {
+        font-weight: bold;
+        color: #4da3ff;
+    }
+    #input-area {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+    }
+    input, button {
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+    }
+    input {
+        flex: 1;
+    }
+    button {
+        background: #4da3ff;
+        color: white;
+        cursor: pointer;
+    }
+</style>
+</head>
+
+<body>
+<div id="chat-container">
+    <h2>Live Chat</h2>
+
+    <input id="username" placeholder="Enter username" />
+
+    <div id="messages"></div>
+
+    <div id="input-area">
+        <input id="messageInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<!-- Firebase CDN -->
+<script type="module">
+    // Import Firebase v10
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getFirestore, collection, addDoc, serverTimestamp,
+        query, orderBy, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Your Firebase Config (Replace this with YOUR real config)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "chatbase-a68ee.firebaseapp.com",
+        projectId: "chatbase-a68ee",
+        storageBucket: "chatbase-a68ee.appspot.com",
+        messagingSenderId: "000000000000",
+        appId: "1:000000000000:web:000000000000",
+    };
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const messagesRef = collection(db, "messages");
+
+    // Load messages live
+    const q = query(messagesRef, orderBy("timestamp"));
+
+    onSnapshot(q, (snapshot) => {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = "";
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const msg = document.createElement("div");
+            msg.className = "message";
+            msg.innerHTML = `<span class='username'>${data.username}:</span> ${data.text}`;
+            messagesDiv.appendChild(msg);
+        });
+
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    // Send message
+    window.sendMessage = async () => {
+        const username = document.getElementById("username").value.trim();
+        const text = document.getElementById("messageInput").value.trim();
+
+        if (!username || !text) return;
+
+        await addDoc(messagesRef, {
+            username,
+            text,
+            timestamp: serverTimestamp()
+        });
+
+        document.getElementById("messageInput").value = "";
+    };
+</script>
+
+</body>
+</html>
