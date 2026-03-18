@@ -6,18 +6,19 @@
 <title>iMessage Chat</title>
 
 <style>
-/* ---------- GLOBAL ---------- */
+/* ---------------- GLOBAL STYLE ---------------- */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   height: 100vh;
   display: flex;
   background: #f2f2f7;
+  overflow: hidden;
 }
 
-/* ---------- SIDEBAR ---------- */
+/* ---------------- SIDEBAR ---------------- */
 #sidebar {
-  width: 320px;
+  width: 300px;
   background: #fff;
   border-right: 1px solid #ddd;
   display: flex;
@@ -36,36 +37,39 @@ body {
   height: 55px;
   border-radius: 50%;
   margin-right: 12px;
+  background: #e5e5ea;
+}
+
+#profileName {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+#profileId {
+  font-size: 12px;
+  opacity: 0.6;
 }
 
 #editProfile {
-  font-size: 13px;
+  margin-top: 6px;
   color: #0a84ff;
+  font-size: 13px;
   cursor: pointer;
 }
 
-/* ----- CONTACTS LIST ----- */
 #contacts {
   flex: 1;
   overflow-y: auto;
 }
 
-.sectionHeader {
-  padding: 8px 15px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
-}
-
+/* CONTACT ITEM */
 .contact {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   align-items: center;
   cursor: pointer;
   border-bottom: 1px solid #f4f4f4;
 }
-
-.contact:hover { background: #f0f0f0; }
 
 .contact img {
   width: 45px;
@@ -74,26 +78,30 @@ body {
   margin-right: 12px;
 }
 
+.contact:hover {
+  background: #f0f0f0;
+}
+
 #addFriendBtn {
-  background: #0a84ff;
-  color: white;
-  margin: 10px;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 15px;
   text-align: center;
+  background: #f9f9f9;
   cursor: pointer;
+  border-top: 1px solid #eee;
+  color: #0a84ff;
   font-weight: 600;
 }
 
-/* ---------- CHAT WINDOW ---------- */
+/* ---------------- CHAT AREA ---------------- */
 #chat {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: #f2f2f7;
 }
 
 #chatHeader {
-  padding: 15px;
+  padding: 16px;
   background: white;
   border-bottom: 1px solid #ddd;
   font-size: 20px;
@@ -106,14 +114,14 @@ body {
   overflow-y: auto;
 }
 
+/* MESSAGE BUBBLES */
 .message {
-  max-width: 65%;
+  max-width: 70%;
   padding: 10px 14px;
   margin-bottom: 12px;
   border-radius: 18px;
   font-size: 15px;
   line-height: 1.3;
-  word-wrap: break-word;
 }
 
 .mine {
@@ -128,35 +136,14 @@ body {
   margin-right: auto;
 }
 
-/* Typing bubble (…) */
+/* TYPING INDICATOR */
 .typing {
-  width: 50px;
-  padding: 8px 12px;
-  border-radius: 18px;
-  background: #e5e5ea;
+  font-size: 12px;
+  opacity: 0.7;
   margin-bottom: 10px;
 }
 
-.dot {
-  height: 6px;
-  width: 6px;
-  margin: 0 2px;
-  background: #555;
-  border-radius: 50%;
-  display: inline-block;
-  animation: blink 1.4s infinite both;
-}
-
-.dot:nth-child(2) { animation-delay: .2s; }
-.dot:nth-child(3) { animation-delay: .4s; }
-
-@keyframes blink {
-  0% {opacity: .2;}
-  20% {opacity: 1;}
-  100% {opacity: .2;}
-}
-
-/* Input bar */
+/* INPUT BAR */
 #inputBar {
   display: flex;
   padding: 10px;
@@ -182,385 +169,281 @@ body {
   font-weight: 600;
 }
 
-/* ---------- MODALS ---------- */
-#modalBG {
+/* ADD FRIEND POPUP */
+#friendPopup {
   position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  display:none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.45);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  width: 320px;
+  padding: 20px;
+  border-radius: 18px;
+  display: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
 }
 
-#modal {
-  width: 90%;
-  max-width: 350px;
-  background:white;
-  padding:20px;
-  border-radius:12px;
+#friendPopup input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
 }
 
-#modal input {
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:10px;
+#friendPopup button {
+  width: 100%;
+  padding: 12px;
+  background: #0a84ff;
+  border: none;
+  color: white;
+  font-size: 15px;
+  border-radius: 14px;
+  cursor: pointer;
 }
 
-#modal button {
-  margin-top:10px;
-  width:100%;
-  background:#0a84ff;
-  color:white;
-  border:none;
-  padding:10px;
-  border-radius:10px;
-  font-weight:600;
-  cursor:pointer;
+#closePopup {
+  text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  color: #666;
 }
-
 </style>
 </head>
 <body>
 
-<!-- ---------- SIDEBAR ---------- -->
+<!-- SIDEBAR -->
 <div id="sidebar">
-
   <div id="profile">
     <img id="myAvatar">
     <div>
-      <div id="myName"></div>
-      <small>ID: <span id="myId"></span></small><br>
-      <span id="editProfile">Edit Profile</span>
+      <div id="profileName"></div>
+      <div id="profileId"></div>
+      <div id="editProfile">Edit Profile</div>
     </div>
   </div>
 
-  <div id="addFriendBtn">Add Friend</div>
-
   <div id="contacts">
-    <div class="sectionHeader">Global</div>
     <div class="contact" data-id="global">
       <img src="https://i.imgur.com/2WZtODx.png">
       <div>🌐 Global Chat</div>
     </div>
-
-    <div class="sectionHeader">Pending Requests</div>
-    <div id="pendingList"></div>
-
-    <div class="sectionHeader">Friends</div>
-    <div id="friendList"></div>
   </div>
 
+  <div id="addFriendBtn">+ Add Friend</div>
 </div>
 
-<!-- ---------- CHAT WINDOW ---------- -->
+<!-- CHAT WINDOW -->
 <div id="chat">
   <div id="chatHeader">Global Chat</div>
   <div id="messages"></div>
 
   <div id="inputBar">
-    <input id="messageInput" placeholder="Message…"/>
+    <input id="messageInput" placeholder="Message…" />
     <button id="sendBtn">Send</button>
   </div>
 </div>
 
-<!-- ---------- MODAL ---------- -->
-<div id="modalBG">
-  <div id="modal">
-    <h3>Add Friend</h3>
-    <input id="friendSearch" placeholder="Enter ID or username">
-    <button id="searchBtn">Search</button>
-    <div id="searchResults"></div>
-  </div>
+<!-- ADD FRIEND POPUP -->
+<div id="friendPopup">
+  <h3>Add Friend</h3>
+  <input id="friendIdInput" placeholder="Friend ID">
+  <button id="sendRequestBtn">Send Friend Request</button>
+  <div id="closePopup">Cancel</div>
 </div>
 
-<!-- ---------- FIREBASE LOGIC ---------- -->
+
+<!-- FIREBASE CODE -->
 <script type="module">
+/* ---------------- IMPORTS ---------------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+import { 
+  getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup 
+} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-
-import {
-  getFirestore, doc, setDoc, updateDoc, getDoc, collection,
-  addDoc, onSnapshot, query, where, orderBy
+import { 
+  getFirestore, doc, setDoc, updateDoc, getDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs 
 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-storage.js";
 
-/* ---------- FIREBASE CONFIG ---------- */
+/* ---------------- FIREBASE CONFIG ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyA8JyrfvNxf-l3dml5YoQouCmwsZwmhx8Q",
   authDomain: "chatbase-a68ee.firebaseapp.com",
   projectId: "chatbase-a68ee",
   storageBucket: "chatbase-a68ee.firebasestorage.app",
   messagingSenderId: "353773816946",
-  appId: "1:353773816946:web:38d815c3e92ce6156b06eb"
+  appId: "1:353773816946:web:38d815c3e92ce6156b06eb",
+  measurementId: "G-3D5QB7B2G3"
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
+/* ---------------- GLOBALS ---------------- */
+let uid = null;
+let myName = "";
+let myAvatar = "";
+let currentChat = "global";
 
-/* ---------- USER SETUP ---------- */
-let myId = localStorage.getItem("myId");
-let myName = localStorage.getItem("myName");
-let myAvatar = localStorage.getItem("myAvatar");
+/* ---------------- AUTO LOGIN ---------------- */
+onAuthStateChanged(auth, async user => {
+  if (!user) await signInAnonymously(auth);
+  uid = auth.currentUser.uid;
+  await loadProfile();
+  loadContacts();
+  loadChat("global");
+});
 
-async function setupUser() {
-  if (!myId) {
-    myId = "user_" + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem("myId", myId);
+/* ---------------- LOAD / CREATE PROFILE ---------------- */
+async function loadProfile() {
+  const userDoc = doc(db, "users", uid);
+  const snap = await getDoc(userDoc);
+
+  if (!snap.exists()) {
+    myName = "User" + Math.floor(Math.random() * 9999);
+    myAvatar = "https://placekitten.com/200/" + Math.floor(Math.random() * 50 + 200);
+
+    await setDoc(userDoc, {
+      userId: uid,
+      name: myName,
+      avatar: myAvatar,
+      createdAt: Date.now()
+    });
+  } else {
+    myName = snap.data().name;
+    myAvatar = snap.data().avatar;
   }
-  if (!myName) {
-    myName = prompt("Enter display name:");
-    localStorage.setItem("myName", myName);
-  }
-  if (!myAvatar) {
-    myAvatar = "https://placekitten.com/200/" + Math.floor(Math.random()*100+200);
-    localStorage.setItem("myAvatar", myAvatar);
-  }
 
-  await setDoc(doc(db, "users", myId), {
-    userId: myId,
-    name: myName,
-    avatar: myAvatar,
-    createdAt: Date.now()
-  }, { merge: true });
-
-  document.getElementById("myId").innerText = myId;
-  document.getElementById("myName").innerText = myName;
+  document.getElementById("profileName").innerText = myName;
+  document.getElementById("profileId").innerText = "ID: " + uid;
   document.getElementById("myAvatar").src = myAvatar;
 }
-setupUser();
 
-
-/* ---------- EDIT PROFILE ---------- */
+/* ---------------- UPDATE PROFILE ---------------- */
 document.getElementById("editProfile").onclick = async () => {
-  const n = prompt("New name:", myName);
-  if (!n) return;
+  const newName = prompt("New display name:", myName);
+  if (!newName) return;
 
-  myName = n;
-  localStorage.setItem("myName", n);
-  updateDoc(doc(db, "users", myId), { name: n });
-
-  document.getElementById("myName").innerText = n;
+  myName = newName;
+  await updateDoc(doc(db, "users", uid), { name: newName });
+  document.getElementById("profileName").innerText = newName;
 };
 
-
-/* ---------- SIDEBAR FRIEND LISTS ---------- */
-
-function drawFriend(user) {
-  return `
-    <div class="contact" data-id="${user.userId}">
-      <img src="${user.avatar}">
-      <div>${user.name}</div>
-    </div>
-  `;
-}
-
-function drawPending(user, fromId) {
-  return `
-    <div class="contact" data-action="pending" data-from="${fromId}">
-      <img src="${user.avatar}">
-      <div>
-        <div>${user.name}</div>
-        <small style="color:#0a84ff;">Tap to Accept</small>
-      </div>
-    </div>
-  `;
-}
-
-/* FRIENDS */
-onSnapshot(collection(db, "users", myId, "contacts"), async snap => {
-  let html = "";
-  for (let d of snap.docs) {
-    html += drawFriend(d.data());
-  }
-  document.getElementById("friendList").innerHTML = html;
-  attachContactListeners();
-});
-
-/* PENDING REQUESTS */
-onSnapshot(collection(db, "users", myId, "requests"), async snap => {
-  let html = "";
-  for (let d of snap.docs) {
-    const fromId = d.id;
-    const u = await getDoc(doc(db, "users", fromId));
-    if (u.exists()) html += drawPending(u.data(), fromId);
-  }
-  document.getElementById("pendingList").innerHTML = html;
-  attachPendingListeners();
-});
-
-
-/* ---------- ADD FRIEND ---------- */
+/* ---------------- ADD FRIEND POPUP ---------------- */
 document.getElementById("addFriendBtn").onclick = () => {
-  document.getElementById("modalBG").style.display = "flex";
+  document.getElementById("friendPopup").style.display = "block";
 };
 
-document.getElementById("searchBtn").onclick = async () => {
-  const val = document.getElementById("friendSearch").value.trim();
-  const box = document.getElementById("searchResults");
+document.getElementById("closePopup").onclick = () => {
+  document.getElementById("friendPopup").style.display = "none";
+};
 
-  box.innerHTML = "<small>Searching…</small>";
-
-  let q;
-  if (val.startsWith("user_")) {
-    q = doc(db, "users", val);
-    const u = await getDoc(q);
-    if (u.exists()) {
-      box.innerHTML = `
-        <div class="contact" data-add="${u.data().userId}">
-          <img src="${u.data().avatar}">
-          <div>${u.data().name}</div>
-        </div>
-      `;
-      attachAddListeners();
-    } else {
-      box.innerHTML = "No user found.";
-    }
+/* ---------------- SEND FRIEND REQUEST ---------------- */
+document.getElementById("sendRequestBtn").onclick = async () => {
+  const friendId = document.getElementById("friendIdInput").value.trim();
+  if (!friendId || friendId === uid) {
+    alert("Invalid friend ID");
     return;
   }
 
-  const searchQ = query(
-    collection(db, "users"),
-    where("name", "==", val)
-  );
-
-  onSnapshot(searchQ, snap => {
-    let html = "";
-    snap.forEach(d => {
-      const u = d.data();
-      html += `
-        <div class="contact" data-add="${u.userId}">
-          <img src="${u.avatar}">
-          <div>${u.name}</div>
-        </div>
-      `;
-    });
-    box.innerHTML = html || "No users found.";
-    attachAddListeners();
-  });
-};
-
-/* CLICK: Send Request */
-function attachAddListeners() {
-  document.querySelectorAll("[data-add]").forEach(e => {
-    e.onclick = async () => {
-      const uid = e.dataset.add;
-      await setDoc(doc(db, "users", uid, "requests", myId), {
-        from: myId,
-        time: Date.now()
-      });
-      alert("Friend request sent!");
-      document.getElementById("modalBG").style.display = "none";
-    };
-  });
-}
-
-/* CLICK: Accept Request */
-function attachPendingListeners() {
-  document.querySelectorAll("[data-action='pending']").forEach(e => {
-    e.onclick = async () => {
-      const fromId = e.dataset.from;
-
-      const u = await getDoc(doc(db, "users", fromId));
-
-      if (u.exists()) {
-        await setDoc(doc(db, "users", myId, "contacts", fromId), u.data());
-        await setDoc(doc(db, "users", fromId, "contacts", myId), {
-          userId: myId,
-          name: myName,
-          avatar: myAvatar
-        });
-
-        await setDoc(doc(db, "users", myId, "requests", fromId), {});
-      }
-    };
-  });
-}
-
-
-/* ---------- CHAT ---------- */
-
-let currentChat = "global";
-let unsubscribeMessages = null;
-
-document.querySelectorAll(".contact").forEach(c => {
-  c.onclick = () => {
-    loadChat(c.dataset.id);
-  };
-});
-
-
-function calculatePrivateRoom(friendId) {
-  return [myId, friendId].sort().join("_");
-}
-
-function getChatCollection(chatId) {
-  if (chatId === "global") {
-    return collection(db, "globalMessages");
-  }
-  const room = calculatePrivateRoom(chatId);
-  return collection(db, "privateChats", room, "messages");
-}
-
-
-function loadChat(chatId) {
-  currentChat = chatId;
-
-  document.getElementById("messages").innerHTML = "";
-  document.getElementById("chatHeader").innerText =
-    chatId === "global" ? "Global Chat" : "Chat";
-
-  if (unsubscribeMessages) unsubscribeMessages();
-
-  const q = query(
-    getChatCollection(chatId),
-    orderBy("time")
-  );
-
-  unsubscribeMessages = onSnapshot(q, snap => {
-    const msgBox = document.getElementById("messages");
-    msgBox.innerHTML = "";
-    snap.forEach(d => {
-      const m = d.data();
-      const div = document.createElement("div");
-      div.className = "message " + (m.senderId === myId ? "mine" : "theirs");
-      div.textContent = m.text;
-      msgBox.appendChild(div);
-    });
-
-    msgBox.scrollTop = msgBox.scrollHeight;
-  });
-}
-
-
-/* ---------- SEND MESSAGE ---------- */
-
-async function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if (!text) return;
-
-  await addDoc(getChatCollection(currentChat), {
-    senderId: myId,
-    senderName: myName,
-    text,
+  await addDoc(collection(db, "friendRequests"), {
+    from: uid,
+    to: friendId,
+    status: "pending",
     time: Date.now()
   });
 
-  input.value = "";
-}
-
-document.getElementById("sendBtn").onclick = sendMessage;
-
-document.getElementById("messageInput").onkeydown = e => {
-  if (e.key === "Enter") sendMessage();
+  alert("Friend request sent!");
+  document.getElementById("friendPopup").style.display = "none";
 };
 
+/* ---------------- LOAD CONTACTS ---------------- */
+async function loadContacts() {
+  const contactsDiv = document.getElementById("contacts");
+
+  // keep Global Chat at top
+  contactsDiv.innerHTML = `
+    <div class="contact" data-id="global">
+      <img src="https://i.imgur.com/2WZtODx.png">
+      <div>🌐 Global Chat</div>
+    </div>
+  `;
+
+  const q = query(collection(db, "users"));
+  const snap = await getDocs(q);
+
+  snap.forEach(u => {
+    if (u.id === uid) return; // skip self
+    const d = u.data();
+
+    const div = document.createElement("div");
+    div.className = "contact";
+    div.dataset.id = u.id;
+    div.innerHTML = `
+      <img src="${d.avatar}">
+      <div>${d.name}</div>
+    `;
+    div.onclick = () => loadChat(u.id);
+    contactsDiv.appendChild(div);
+  });
+}
+
+/* ---------------- CHAT LOADING ---------------- */
+function getChatCollection(chatId) {
+  return chatId === "global"
+    ? collection(db, "globalMessages")
+    : collection(db, "privateChats", [uid, chatId].sort().join("_"), "messages");
+}
+
+function loadChat(chatId) {
+  currentChat = chatId;
+  const chatHeader = document.getElementById("chatHeader");
+  const messagesDiv = document.getElementById("messages");
+  messagesDiv.innerHTML = "";
+
+  chatHeader.innerText = chatId === "global" ? "Global Chat" : "Chat with " + chatId;
+
+  const q = query(getChatCollection(chatId), orderBy("time"));
+  onSnapshot(q, snapshot => {
+    messagesDiv.innerHTML = "";
+    snapshot.forEach(doc => {
+      const m = doc.data();
+      const div = document.createElement("div");
+      div.className = "message " + (m.senderId === uid ? "mine" : "theirs");
+      div.innerText = m.text;
+      messagesDiv.appendChild(div);
+    });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+
+/* ---------------- SEND MESSAGE ---------------- */
+document.getElementById("sendBtn").onclick = sendMessage;
+document.getElementById("messageInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+  const msg = document.getElementById("messageInput").value.trim();
+  if (!msg) return;
+
+  await addDoc(getChatCollection(currentChat), {
+    senderId: uid,
+    senderName: myName,
+    text: msg,
+    time: Date.now()
+  });
+
+  document.getElementById("messageInput").value = "";
+}
 
 </script>
+
 </body>
 </html>
