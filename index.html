@@ -1,449 +1,640 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>iMessage Chat</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iMessage Web</title>
 
 <style>
-/* ---------------- GLOBAL STYLE ---------------- */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  height: 100vh;
-  display: flex;
-  background: #f2f2f7;
-  overflow: hidden;
+/* RESET */
+body,html {
+  margin:0;
+  padding:0;
+  height:100%;
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+  background:#f2f2f7;
+  overflow:hidden;
 }
 
-/* ---------------- SIDEBAR ---------------- */
+/* MAIN WRAPPER */
+#app {
+  display:flex;
+  height:100vh;
+  width:100vw;
+}
+
+/* -------- SIDEBAR -------- */
 #sidebar {
-  width: 300px;
-  background: #fff;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
+  width:320px;
+  background:white;
+  border-right:1px solid #dcdcdc;
+  display:flex;
+  flex-direction:column;
 }
 
-#profile {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #eee;
+#profileBlock {
+  padding:20px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid #eee;
 }
 
-#profile img {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  margin-right: 12px;
-  background: #e5e5ea;
+#profileAvatar {
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  margin-right:12px;
+  object-fit:cover;
 }
 
-#profileName {
-  font-size: 18px;
-  font-weight: 600;
+#editProfileBtn {
+  margin-top:4px;
+  font-size:13px;
+  color:#007aff;
+  cursor:pointer;
 }
 
-#profileId {
-  font-size: 12px;
-  opacity: 0.6;
-}
-
-#editProfile {
-  margin-top: 6px;
-  color: #0a84ff;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-#contacts {
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* CONTACT ITEM */
-.contact {
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  border-bottom: 1px solid #f4f4f4;
-}
-
-.contact img {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  margin-right: 12px;
-}
-
-.contact:hover {
-  background: #f0f0f0;
+#friendsHeader {
+  padding:10px 15px;
+  font-weight:600;
+  font-size:15px;
+  border-bottom:1px solid #eee;
 }
 
 #addFriendBtn {
-  padding: 15px;
-  text-align: center;
-  background: #f9f9f9;
-  cursor: pointer;
-  border-top: 1px solid #eee;
-  color: #0a84ff;
-  font-weight: 600;
+  color:#007aff;
+  float:right;
+  cursor:pointer;
 }
 
-/* ---------------- CHAT AREA ---------------- */
-#chat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #f2f2f7;
+#contactList {
+  flex:1;
+  overflow-y:auto;
+}
+
+.contactItem {
+  padding:15px;
+  display:flex;
+  align-items:center;
+  cursor:pointer;
+  border-bottom:1px solid #f4f4f4;
+}
+
+.contactItem:hover {
+  background:#f3f3f3;
+}
+
+.contactAvatar {
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  margin-right:12px;
+  object-fit:cover;
+}
+
+.contactName {
+  font-size:16px;
+  font-weight:500;
+}
+
+.onlineDot {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  margin-left:6px;
+  background:#2ecc71;
+}
+
+/* -------- CHAT AREA -------- */
+#chatArea {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:#f2f2f7;
 }
 
 #chatHeader {
-  padding: 16px;
-  background: white;
-  border-bottom: 1px solid #ddd;
-  font-size: 20px;
-  font-weight: 600;
+  padding:15px;
+  background:white;
+  border-bottom:1px solid #ddd;
+  font-size:20px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+}
+
+#typingIndicator {
+  font-size:14px;
+  margin-left:10px;
+  color:#888;
+  display:none;
 }
 
 #messages {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
+  flex:1;
+  overflow-y:auto;
+  padding:20px;
 }
 
-/* MESSAGE BUBBLES */
-.message {
-  max-width: 70%;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  border-radius: 18px;
-  font-size: 15px;
-  line-height: 1.3;
+.messageBubble {
+  max-width:65%;
+  padding:12px 16px;
+  border-radius:18px;
+  margin-bottom:12px;
+  line-height:1.3;
+  font-size:15px;
 }
 
 .mine {
-  background: #0a84ff;
-  color: white;
-  margin-left: auto;
+  background:#007aff;
+  color:white;
+  margin-left:auto;
+  border-bottom-right-radius:4px;
 }
 
 .theirs {
-  background: #e5e5ea;
-  color: black;
-  margin-right: auto;
-}
-
-/* TYPING INDICATOR */
-.typing {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-bottom: 10px;
+  background:#e5e5ea;
+  color:black;
+  margin-right:auto;
+  border-bottom-left-radius:4px;
 }
 
 /* INPUT BAR */
 #inputBar {
-  display: flex;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #ddd;
+  display:flex;
+  padding:12px;
+  background:white;
+  border-top:1px solid #ddd;
 }
 
-#messageInput {
-  flex: 1;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid #ccc;
+#msgInput {
+  flex:1;
+  padding:12px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  outline:none;
+  font-size:15px;
 }
 
 #sendBtn {
-  margin-left: 10px;
-  padding: 10px 16px;
-  background: #0a84ff;
-  border: none;
-  border-radius: 18px;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
+  margin-left:10px;
+  padding:10px 18px;
+  background:#007aff;
+  border:none;
+  border-radius:20px;
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+  font-size:15px;
 }
 
-/* ADD FRIEND POPUP */
-#friendPopup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  width: 320px;
-  padding: 20px;
-  border-radius: 18px;
-  display: none;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+/* -------- MODALS -------- */
+.modal {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
 
-#friendPopup input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 14px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
+.modalBox {
+  background:white;
+  width:380px;
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0 5px 18px rgba(0,0,0,0.25);
 }
 
-#friendPopup button {
-  width: 100%;
-  padding: 12px;
-  background: #0a84ff;
-  border: none;
-  color: white;
-  font-size: 15px;
-  border-radius: 14px;
-  cursor: pointer;
-}
-
-#closePopup {
-  text-align: center;
-  margin-top: 10px;
-  cursor: pointer;
-  color: #666;
+.modalTitle {
+  font-size:20px;
+  font-weight:600;
+  margin-bottom:15px;
 }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div id="sidebar">
-  <div id="profile">
-    <img id="myAvatar">
-    <div>
-      <div id="profileName"></div>
-      <div id="profileId"></div>
-      <div id="editProfile">Edit Profile</div>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="profileBlock">
+      <img id="profileAvatar">
+      <div>
+        <div id="profileName"></div>
+        <div style="font-size:12px;color:#777;">ID: <span id="profileId"></span></div>
+        <div id="editProfileBtn">Edit Profile</div>
+      </div>
+    </div>
+
+    <div id="friendsHeader">
+      Contacts
+      <span id="addFriendBtn">＋</span>
+    </div>
+
+    <div id="contactList"></div>
+  </div>
+
+  <!-- CHAT WINDOW -->
+  <div id="chatArea">
+    <div id="chatHeader">
+      <span id="chatTitle">Select a Chat</span>
+      <span id="typingIndicator">typing…</span>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="inputBar">
+      <input id="msgInput" placeholder="Message…">
+      <button id="sendBtn">Send</button>
     </div>
   </div>
-
-  <div id="contacts">
-    <div class="contact" data-id="global">
-      <img src="https://i.imgur.com/2WZtODx.png">
-      <div>🌐 Global Chat</div>
-    </div>
-  </div>
-
-  <div id="addFriendBtn">+ Add Friend</div>
 </div>
+<!-- MODALS -->
 
-<!-- CHAT WINDOW -->
-<div id="chat">
-  <div id="chatHeader">Global Chat</div>
-  <div id="messages"></div>
+<!-- Edit Profile Modal -->
+<div id="profileModal" class="modal">
+  <div class="modalBox">
+    <div class="modalTitle">Edit Profile</div>
 
-  <div id="inputBar">
-    <input id="messageInput" placeholder="Message…" />
-    <button id="sendBtn">Send</button>
+    <label>Display Name</label><br>
+    <input id="editNameInput" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;"><br><br>
+
+    <label>Avatar</label><br>
+    <input type="file" id="avatarFileInput"><br><br>
+
+    <button id="saveProfileBtn" style="padding:10px 15px;background:#007aff;color:white;border:none;border-radius:10px;cursor:pointer;">
+      Save Changes
+    </button>
   </div>
 </div>
 
-<!-- ADD FRIEND POPUP -->
-<div id="friendPopup">
-  <h3>Add Friend</h3>
-  <input id="friendIdInput" placeholder="Friend ID">
-  <button id="sendRequestBtn">Send Friend Request</button>
-  <div id="closePopup">Cancel</div>
+<!-- Add Friend Modal -->
+<div id="addFriendModal" class="modal">
+  <div class="modalBox">
+    <div class="modalTitle">Add Friend</div>
+
+    <input id="friendSearchInput" placeholder="Enter username or ID"
+      style="width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;">
+    <br><br>
+
+    <button id="friendSearchBtn"
+      style="padding:10px 15px;background:#007aff;color:white;border:none;border-radius:10px;cursor:pointer;">
+      Search
+    </button>
+
+    <div id="friendSearchResults" style="margin-top:15px;"></div>
+  </div>
 </div>
 
-
-<!-- FIREBASE CODE -->
 <script type="module">
-/* ---------------- IMPORTS ---------------- */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+/* ------------------------ FIREBASE IMPORTS ------------------------ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
-  getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup 
-} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
-
-import { 
-  getFirestore, doc, setDoc, updateDoc, getDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs 
-} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+  getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc,
+  query, onSnapshot, orderBy, where, getDocs 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
   getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-/* ---------------- FIREBASE CONFIG ---------------- */
+/* ------------------------ FIREBASE CONFIG ------------------------ */
 const firebaseConfig = {
   apiKey: "AIzaSyA8JyrfvNxf-l3dml5YoQouCmwsZwmhx8Q",
   authDomain: "chatbase-a68ee.firebaseapp.com",
   projectId: "chatbase-a68ee",
-  storageBucket: "chatbase-a68ee.firebasestorage.app",
+  storageBucket: "chatbase-a68ee.appspot.com",
   messagingSenderId: "353773816946",
   appId: "1:353773816946:web:38d815c3e92ce6156b06eb",
   measurementId: "G-3D5QB7B2G3"
 };
 
+/* ------------------------ INIT FIREBASE ------------------------ */
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-/* ---------------- GLOBALS ---------------- */
-let uid = null;
-let myName = "";
-let myAvatar = "";
-let currentChat = "global";
+/* ------------------------ USER SYSTEM ------------------------ */
+let myId = localStorage.getItem("myId");
+let myName = localStorage.getItem("myName");
+let myAvatar = localStorage.getItem("myAvatar");
 
-/* ---------------- AUTO LOGIN ---------------- */
-onAuthStateChanged(auth, async user => {
-  if (!user) await signInAnonymously(auth);
-  uid = auth.currentUser.uid;
-  await loadProfile();
-  loadContacts();
-  loadChat("global");
-});
-
-/* ---------------- LOAD / CREATE PROFILE ---------------- */
-async function loadProfile() {
-  const userDoc = doc(db, "users", uid);
-  const snap = await getDoc(userDoc);
-
-  if (!snap.exists()) {
-    myName = "User" + Math.floor(Math.random() * 9999);
-    myAvatar = "https://placekitten.com/200/" + Math.floor(Math.random() * 50 + 200);
-
-    await setDoc(userDoc, {
-      userId: uid,
-      name: myName,
-      avatar: myAvatar,
-      createdAt: Date.now()
-    });
-  } else {
-    myName = snap.data().name;
-    myAvatar = snap.data().avatar;
-  }
-
-  document.getElementById("profileName").innerText = myName;
-  document.getElementById("profileId").innerText = "ID: " + uid;
-  document.getElementById("myAvatar").src = myAvatar;
+/* Create a new random user ID if not exist */
+if (!myId) {
+  myId = "user_" + Math.random().toString(36).substring(2,10);
+  localStorage.setItem("myId", myId);
 }
 
-/* ---------------- UPDATE PROFILE ---------------- */
-document.getElementById("editProfile").onclick = async () => {
-  const newName = prompt("New display name:", myName);
-  if (!newName) return;
+/* Ask name on first use */
+if (!myName) {
+  myName = prompt("Choose a display name:", "Guest");
+  if (!myName) myName = "Guest";
+  localStorage.setItem("myName", myName);
+}
 
+/* Default avatar */
+if (!myAvatar) {
+  myAvatar = `https://api.dicebear.com/7.x/thumbs/svg?seed=${myId}`;
+  localStorage.setItem("myAvatar", myAvatar);
+}
+
+/* Put the profile data in UI */
+document.getElementById("profileName").textContent = myName;
+document.getElementById("profileId").textContent = myId;
+document.getElementById("profileAvatar").src = myAvatar;
+
+/* Save to Firestore */
+await setDoc(doc(db, "users", myId), {
+  userId: myId,
+  name: myName,
+  avatar: myAvatar,
+  online: Date.now(),
+  friends: []
+}, { merge: true });
+
+/* ------------------------ HEARTBEAT (ONLINE STATUS) ------------------------ */
+setInterval(async ()=>{
+  await updateDoc(doc(db,"users",myId), {
+    online: Date.now()
+  });
+}, 15000);
+
+/* ------------------------ PROFILE EDITING ------------------------ */
+
+const profileModal = document.getElementById("profileModal");
+document.getElementById("editProfileBtn").onclick = () => {
+  document.getElementById("editNameInput").value = myName;
+  profileModal.style.display = "flex";
+};
+
+profileModal.onclick = (e)=>{
+  if (e.target === profileModal) profileModal.style.display = "none";
+};
+
+/* Save profile changes */
+document.getElementById("saveProfileBtn").onclick = async () => {
+  const newName = document.getElementById("editNameInput").value.trim();
+  const fileInput = document.getElementById("avatarFileInput");
+
+  let newAvatar = myAvatar;
+
+  /* If avatar file uploaded */
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const storageRef = ref(storage, `avatars/${myId}.jpg`);
+    await uploadBytes(storageRef, file);
+    newAvatar = await getDownloadURL(storageRef);
+  }
+
+  /* Save to Firestore */
+  await updateDoc(doc(db,"users",myId), {
+    name: newName,
+    avatar: newAvatar
+  });
+
+  /* Save locally */
   myName = newName;
-  await updateDoc(doc(db, "users", uid), { name: newName });
-  document.getElementById("profileName").innerText = newName;
+  myAvatar = newAvatar;
+  localStorage.setItem("myName", myName);
+  localStorage.setItem("myAvatar", myAvatar);
+
+  /* Update UI */
+  document.getElementById("profileName").textContent = myName;
+  document.getElementById("profileAvatar").src = myAvatar;
+
+  profileModal.style.display = "none";
 };
 
-/* ---------------- ADD FRIEND POPUP ---------------- */
-document.getElementById("addFriendBtn").onclick = () => {
-  document.getElementById("friendPopup").style.display = "block";
+/* ------------------------ ADD FRIEND MODAL ------------------------ */
+
+const addFriendModal = document.getElementById("addFriendModal");
+
+document.getElementById("addFriendBtn").onclick = ()=>{
+  document.getElementById("friendSearchInput").value = "";
+  document.getElementById("friendSearchResults").innerHTML = "";
+  addFriendModal.style.display = "flex";
 };
 
-document.getElementById("closePopup").onclick = () => {
-  document.getElementById("friendPopup").style.display = "none";
+addFriendModal.onclick = (e)=>{
+  if (e.target === addFriendModal) addFriendModal.style.display = "none";
 };
 
-/* ---------------- SEND FRIEND REQUEST ---------------- */
-document.getElementById("sendRequestBtn").onclick = async () => {
-  const friendId = document.getElementById("friendIdInput").value.trim();
-  if (!friendId || friendId === uid) {
-    alert("Invalid friend ID");
+/* Search users */
+document.getElementById("friendSearchBtn").onclick = async ()=>{
+  let qVal = document.getElementById("friendSearchInput").value.trim();
+  let output = document.getElementById("friendSearchResults");
+  output.innerHTML = "";
+
+  if (!qVal) return;
+
+  // Search by ID EXACT
+  let docSnap = await getDoc(doc(db,"users",qVal));
+  let results = [];
+
+  if (docSnap.exists()) {
+    results.push(docSnap.data());
+  } else {
+    // Search by name
+    const q = query(collection(db,"users"), where("name", "==", qVal));
+    const querySnap = await getDocs(q);
+    querySnap.forEach(d => results.push(d.data()));
+  }
+
+  if (results.length === 0) {
+    output.innerHTML = "<div>No users found.</div>";
     return;
   }
 
-  await addDoc(collection(db, "friendRequests"), {
-    from: uid,
-    to: friendId,
-    status: "pending",
-    time: Date.now()
-  });
-
-  alert("Friend request sent!");
-  document.getElementById("friendPopup").style.display = "none";
-};
-
-/* ---------------- LOAD CONTACTS ---------------- */
-async function loadContacts() {
-  const contactsDiv = document.getElementById("contacts");
-
-  // keep Global Chat at top
-  contactsDiv.innerHTML = `
-    <div class="contact" data-id="global">
-      <img src="https://i.imgur.com/2WZtODx.png">
-      <div>🌐 Global Chat</div>
-    </div>
-  `;
-
-  const q = query(collection(db, "users"));
-  const snap = await getDocs(q);
-
-  snap.forEach(u => {
-    if (u.id === uid) return; // skip self
-    const d = u.data();
+  results.forEach(user=>{
+    if (user.userId === myId) return;
 
     const div = document.createElement("div");
-    div.className = "contact";
-    div.dataset.id = u.id;
+    div.style.padding = "10px";
+    div.style.borderBottom = "1px solid #eee";
+    div.style.cursor = "pointer";
     div.innerHTML = `
-      <img src="${d.avatar}">
-      <div>${d.name}</div>
+      <img src="${user.avatar}" style="width:35px;height:35px;border-radius:50%;vertical-align:middle;margin-right:8px;">
+      ${user.name} <span style="font-size:12px;color:#777;">(${user.userId})</span>
     `;
-    div.onclick = () => loadChat(u.id);
-    contactsDiv.appendChild(div);
+
+    div.onclick = async ()=>{
+      // Add to friends list instantly (your rules allow all writes)
+      const meRef = doc(db,"users",myId);
+      const themRef = doc(db,"users",user.userId);
+
+      await updateDoc(meRef, {
+        friends: Array.from(new Set([...( (await getDoc(meRef)).data().friends || [] ), user.userId]))
+      });
+
+      await updateDoc(themRef, {
+        friends: Array.from(new Set([...( (await getDoc(themRef)).data().friends || [] ), myId]))
+      });
+
+      addFriendModal.style.display = "none";
+    };
+
+    output.appendChild(div);
   });
+};
+
+<!-- profile.html -->
+<div id="profilePage" class="page hidden">
+  <h2>Your Profile</h2>
+
+  <div class="profile-card">
+    <img id="profileAvatar" class="avatar-large" src="" />
+
+    <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+    <button onclick="triggerAvatarUpload()">Change Avatar</button>
+
+    <label>Username</label>
+    <input id="profileName" type="text" />
+
+    <button onclick="saveProfile()">Save Changes</button>
+  </div>
+</div>
+
+<style>
+  .profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 350px;
+  }
+  .avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 100%;
+    object-fit: cover;
+    border: 2px solid #333;
+  }
+</style>
+
+<script type="module">
+import {
+  db,
+  storage,
+  getUserId,
+  getUserDocRef
+} from "./firebaseCore.js";
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+
+
+// ==============================
+// SHOW PROFILE PAGE
+// ==============================
+export async function openProfilePage() {
+  hideAllPages();
+
+  document.getElementById("profilePage").classList.remove("hidden");
+
+  await loadProfile();
 }
 
-/* ---------------- CHAT LOADING ---------------- */
-function getChatCollection(chatId) {
-  return chatId === "global"
-    ? collection(db, "globalMessages")
-    : collection(db, "privateChats", [uid, chatId].sort().join("_"), "messages");
-}
 
-function loadChat(chatId) {
-  currentChat = chatId;
-  const chatHeader = document.getElementById("chatHeader");
-  const messagesDiv = document.getElementById("messages");
-  messagesDiv.innerHTML = "";
+// ==============================
+// LOAD PROFILE (fetch or auto-create)
+// ==============================
+async function loadProfile() {
 
-  chatHeader.innerText = chatId === "global" ? "Global Chat" : "Chat with " + chatId;
+  const uid = getUserId();
+  const userRef = getUserDocRef();
+  const snap = await getDoc(userRef);
 
-  const q = query(getChatCollection(chatId), orderBy("time"));
-  onSnapshot(q, snapshot => {
-    messagesDiv.innerHTML = "";
-    snapshot.forEach(doc => {
-      const m = doc.data();
-      const div = document.createElement("div");
-      div.className = "message " + (m.senderId === uid ? "mine" : "theirs");
-      div.innerText = m.text;
-      messagesDiv.appendChild(div);
+  if (!snap.exists()) {
+    // AUTO-CREATE PROFILE
+    const defaultAvatar =
+      "https://cdn-icons-png.flaticon.com/512/6596/6596121.png";
+
+    await setDoc(userRef, {
+      userId: uid,
+      name: "New User",
+      avatar: defaultAvatar,
+      createdAt: Date.now()
     });
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  });
+
+    document.getElementById("profileAvatar").src = defaultAvatar;
+    document.getElementById("profileName").value = "New User";
+    return;
+  }
+
+  const data = snap.data();
+
+  document.getElementById("profileAvatar").src = data.avatar;
+  document.getElementById("profileName").value = data.name;
 }
 
-/* ---------------- SEND MESSAGE ---------------- */
-document.getElementById("sendBtn").onclick = sendMessage;
-document.getElementById("messageInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") sendMessage();
+
+// ==============================
+// TRIGGER AVATAR INPUT CLICK
+// ==============================
+window.triggerAvatarUpload = function () {
+  document.getElementById("avatarInput").click();
+};
+
+
+// ==============================
+// LISTEN FOR FILE SELECTED
+// ==============================
+document.getElementById("avatarInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  await uploadAvatar(file);
 });
 
-async function sendMessage() {
-  const msg = document.getElementById("messageInput").value.trim();
-  if (!msg) return;
 
-  await addDoc(getChatCollection(currentChat), {
-    senderId: uid,
-    senderName: myName,
-    text: msg,
-    time: Date.now()
-  });
+// ==============================
+// UPLOAD AVATAR TO FIREBASE STORAGE
+// ==============================
+async function uploadAvatar(file) {
+  const uid = getUserId();
 
-  document.getElementById("messageInput").value = "";
+  const avatarRef = ref(storage, `avatars/${uid}.jpg`);
+
+  await uploadBytes(avatarRef, file);
+
+  const url = await getDownloadURL(avatarRef);
+
+  document.getElementById("profileAvatar").src = url;
+
+  // Auto-save avatar
+  await updateDoc(getUserDocRef(), { avatar: url });
 }
 
-</script>
 
-</body>
-</html>
+// ==============================
+// SAVE PROFILE (avatar already saved)
+// ==============================
+window.saveProfile = async function () {
+
+  const name = document.getElementById("profileName").value.trim();
+
+  if (name.length < 2) {
+    alert("Name must be at least 2 characters.");
+    return;
+  }
+
+  await updateDoc(getUserDocRef(), {
+    name: name
+  });
+
+  alert("Profile saved.");
+};
+
+</script>
