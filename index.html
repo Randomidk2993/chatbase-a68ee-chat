@@ -170,7 +170,6 @@ body {
   </div>
 </div>
 
-
 <!-- FIREBASE -->
 <script type="module">
 
@@ -192,7 +191,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 
 /* ----- USER PROFILE SYSTEM ----- */
 let myId = localStorage.getItem("myId");
@@ -229,7 +227,6 @@ async function setupUser() {
 
 setupUser();
 
-
 /* ----- EDIT PROFILE ----- */
 document.getElementById("editProfile").onclick = async () => {
   const newName = prompt("New display name:", myName);
@@ -244,7 +241,6 @@ document.getElementById("editProfile").onclick = async () => {
 
   document.getElementById("myName").innerText = newName;
 };
-
 
 /* ----- CHAT SYSTEM ----- */
 let currentChat = "global";
