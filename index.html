@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ChatBase iMessage</title>
+<title>iMessage Chat</title>
 
 <style>
+/* ---------- GLOBAL ---------- */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -14,7 +15,7 @@ body {
   background: #f2f2f7;
 }
 
-/* ----- SIDEBAR ----- */
+/* ---------- SIDEBAR ---------- */
 #sidebar {
   width: 320px;
   background: #fff;
@@ -38,15 +39,22 @@ body {
 }
 
 #editProfile {
-  margin-top: 5px;
   font-size: 13px;
   color: #0a84ff;
   cursor: pointer;
 }
 
+/* ----- CONTACTS LIST ----- */
 #contacts {
   flex: 1;
   overflow-y: auto;
+}
+
+.sectionHeader {
+  padding: 8px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
 }
 
 .contact {
@@ -57,9 +65,7 @@ body {
   border-bottom: 1px solid #f4f4f4;
 }
 
-.contact:hover {
-  background: #f0f0f0;
-}
+.contact:hover { background: #f0f0f0; }
 
 .contact img {
   width: 45px;
@@ -68,7 +74,18 @@ body {
   margin-right: 12px;
 }
 
-/* ----- CHAT AREA ----- */
+#addFriendBtn {
+  background: #0a84ff;
+  color: white;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ---------- CHAT WINDOW ---------- */
 #chat {
   flex: 1;
   display: flex;
@@ -89,14 +106,14 @@ body {
   overflow-y: auto;
 }
 
-/* message bubbles */
 .message {
-  max-width: 70%;
+  max-width: 65%;
   padding: 10px 14px;
   margin-bottom: 12px;
   border-radius: 18px;
   font-size: 15px;
   line-height: 1.3;
+  word-wrap: break-word;
 }
 
 .mine {
@@ -111,15 +128,35 @@ body {
   margin-right: auto;
 }
 
-/* typing indicator */
-#typingIndicator {
-  margin: 10px 0;
-  color: #555;
-  font-size: 14px;
-  font-style: italic;
+/* Typing bubble (…) */
+.typing {
+  width: 50px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: #e5e5ea;
+  margin-bottom: 10px;
 }
 
-/* input bar */
+.dot {
+  height: 6px;
+  width: 6px;
+  margin: 0 2px;
+  background: #555;
+  border-radius: 50%;
+  display: inline-block;
+  animation: blink 1.4s infinite both;
+}
+
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+  0% {opacity: .2;}
+  20% {opacity: 1;}
+  100% {opacity: .2;}
+}
+
+/* Input bar */
 #inputBar {
   display: flex;
   padding: 10px;
@@ -145,90 +182,127 @@ body {
   font-weight: 600;
 }
 
-/* typing bubbles animation */
-.typingBubble {
-  width: 6px;
-  height: 6px;
-  background: #aaa;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 3px;
-  animation: blink 1.4s infinite both;
+/* ---------- MODALS ---------- */
+#modalBG {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  display:none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.45);
 }
 
-.typingBubble:nth-child(2) {
-  animation-delay: 0.2s;
+#modal {
+  width: 90%;
+  max-width: 350px;
+  background:white;
+  padding:20px;
+  border-radius:12px;
 }
 
-.typingBubble:nth-child(3) {
-  animation-delay: 0.4s;
+#modal input {
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
 }
 
-@keyframes blink {
-  0% { opacity: .2; }
-  20% { opacity: 1; }
-  100% { opacity: .2; }
+#modal button {
+  margin-top:10px;
+  width:100%;
+  background:#0a84ff;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
 }
 
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
+<!-- ---------- SIDEBAR ---------- -->
 <div id="sidebar">
 
   <div id="profile">
-    <img id="myAvatar" src="">
+    <img id="myAvatar">
     <div>
       <div id="myName"></div>
-      <small>ID: <span id="myId"></span></small>
-      <div id="editProfile">Edit Profile</div>
+      <small>ID: <span id="myId"></span></small><br>
+      <span id="editProfile">Edit Profile</span>
     </div>
   </div>
 
+  <div id="addFriendBtn">Add Friend</div>
+
   <div id="contacts">
-    <!-- Global chat added in JS -->
+    <div class="sectionHeader">Global</div>
+    <div class="contact" data-id="global">
+      <img src="https://i.imgur.com/2WZtODx.png">
+      <div>🌐 Global Chat</div>
+    </div>
+
+    <div class="sectionHeader">Pending Requests</div>
+    <div id="pendingList"></div>
+
+    <div class="sectionHeader">Friends</div>
+    <div id="friendList"></div>
   </div>
 
 </div>
 
-<!-- CHAT WINDOW -->
+<!-- ---------- CHAT WINDOW ---------- -->
 <div id="chat">
   <div id="chatHeader">Global Chat</div>
   <div id="messages"></div>
 
-  <div id="typingIndicator"></div>
-
   <div id="inputBar">
-    <input id="messageInput" placeholder="Message…" />
+    <input id="messageInput" placeholder="Message…"/>
     <button id="sendBtn">Send</button>
   </div>
 </div>
 
+<!-- ---------- MODAL ---------- -->
+<div id="modalBG">
+  <div id="modal">
+    <h3>Add Friend</h3>
+    <input id="friendSearch" placeholder="Enter ID or username">
+    <button id="searchBtn">Search</button>
+    <div id="searchResults"></div>
+  </div>
+</div>
 
-
-<!-- FIREBASE LOGIC -->
+<!-- ---------- FIREBASE LOGIC ---------- -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+
 import {
   getFirestore, doc, setDoc, updateDoc, getDoc, collection,
-  addDoc, onSnapshot, query, orderBy, getDocs
+  addDoc, onSnapshot, query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
+
+/* ---------- FIREBASE CONFIG ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyA8JyrfvNxf-l3dml5YoQouCmwsZwmhx8Q",
   authDomain: "chatbase-a68ee.firebaseapp.com",
   projectId: "chatbase-a68ee",
   storageBucket: "chatbase-a68ee.firebasestorage.app",
   messagingSenderId: "353773816946",
-  appId: "1:353773816946:web:38d815c3e92ce6156b06eb",
-  measurementId: "G-3D5QB7B2G3"
+  appId: "1:353773816946:web:38d815c3e92ce6156b06eb"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ----- USER SETUP ----- */
+
+/* ---------- USER SETUP ---------- */
 let myId = localStorage.getItem("myId");
 let myName = localStorage.getItem("myName");
 let myAvatar = localStorage.getItem("myAvatar");
@@ -239,11 +313,11 @@ async function setupUser() {
     localStorage.setItem("myId", myId);
   }
   if (!myName) {
-    myName = prompt("Display name:") || "User";
+    myName = prompt("Enter display name:");
     localStorage.setItem("myName", myName);
   }
   if (!myAvatar) {
-    myAvatar = "https://placekitten.com/200/" + (200 + Math.floor(Math.random() * 40));
+    myAvatar = "https://placekitten.com/200/" + Math.floor(Math.random()*100+200);
     localStorage.setItem("myAvatar", myAvatar);
   }
 
@@ -251,91 +325,204 @@ async function setupUser() {
     userId: myId,
     name: myName,
     avatar: myAvatar,
-    active: true,
-    updatedAt: Date.now()
+    createdAt: Date.now()
   }, { merge: true });
 
   document.getElementById("myId").innerText = myId;
   document.getElementById("myName").innerText = myName;
   document.getElementById("myAvatar").src = myAvatar;
 }
+setupUser();
 
-await setupUser();
 
-/* ---- EDIT PROFILE ---- */
+/* ---------- EDIT PROFILE ---------- */
 document.getElementById("editProfile").onclick = async () => {
-  const newName = prompt("New name:", myName);
-  if (!newName) return;
+  const n = prompt("New name:", myName);
+  if (!n) return;
 
-  myName = newName;
-  localStorage.setItem("myName", newName);
-  document.getElementById("myName").innerText = newName;
+  myName = n;
+  localStorage.setItem("myName", n);
+  updateDoc(doc(db, "users", myId), { name: n });
 
-  await updateDoc(doc(db, "users", myId), { name: newName });
+  document.getElementById("myName").innerText = n;
 };
 
-/* ----- CONTACT LIST ----- */
-async function loadContacts() {
-  const contactsDiv = document.getElementById("contacts");
 
-  contactsDiv.innerHTML = `
-    <div class="contact" data-id="global">
-      <img src="https://i.imgur.com/2WZtODx.png">
-      🌐 Global Chat
+/* ---------- SIDEBAR FRIEND LISTS ---------- */
+
+function drawFriend(user) {
+  return `
+    <div class="contact" data-id="${user.userId}">
+      <img src="${user.avatar}">
+      <div>${user.name}</div>
     </div>
   `;
+}
 
-  const snap = await getDocs(collection(db, "users"));
-  snap.forEach(u => {
-    const data = u.data();
-    if (data.userId === myId) return;
+function drawPending(user, fromId) {
+  return `
+    <div class="contact" data-action="pending" data-from="${fromId}">
+      <img src="${user.avatar}">
+      <div>
+        <div>${user.name}</div>
+        <small style="color:#0a84ff;">Tap to Accept</small>
+      </div>
+    </div>
+  `;
+}
 
-    const div = document.createElement("div");
-    div.className = "contact";
-    div.dataset.id = data.userId;
-    div.innerHTML = `
-      <img src="${data.avatar}">
-      ${data.name}
-    `;
-    div.onclick = () => openPrivateChat(data.userId, data.name);
+/* FRIENDS */
+onSnapshot(collection(db, "users", myId, "contacts"), async snap => {
+  let html = "";
+  for (let d of snap.docs) {
+    html += drawFriend(d.data());
+  }
+  document.getElementById("friendList").innerHTML = html;
+  attachContactListeners();
+});
 
-    contactsDiv.appendChild(div);
+/* PENDING REQUESTS */
+onSnapshot(collection(db, "users", myId, "requests"), async snap => {
+  let html = "";
+  for (let d of snap.docs) {
+    const fromId = d.id;
+    const u = await getDoc(doc(db, "users", fromId));
+    if (u.exists()) html += drawPending(u.data(), fromId);
+  }
+  document.getElementById("pendingList").innerHTML = html;
+  attachPendingListeners();
+});
+
+
+/* ---------- ADD FRIEND ---------- */
+document.getElementById("addFriendBtn").onclick = () => {
+  document.getElementById("modalBG").style.display = "flex";
+};
+
+document.getElementById("searchBtn").onclick = async () => {
+  const val = document.getElementById("friendSearch").value.trim();
+  const box = document.getElementById("searchResults");
+
+  box.innerHTML = "<small>Searching…</small>";
+
+  let q;
+  if (val.startsWith("user_")) {
+    q = doc(db, "users", val);
+    const u = await getDoc(q);
+    if (u.exists()) {
+      box.innerHTML = `
+        <div class="contact" data-add="${u.data().userId}">
+          <img src="${u.data().avatar}">
+          <div>${u.data().name}</div>
+        </div>
+      `;
+      attachAddListeners();
+    } else {
+      box.innerHTML = "No user found.";
+    }
+    return;
+  }
+
+  const searchQ = query(
+    collection(db, "users"),
+    where("name", "==", val)
+  );
+
+  onSnapshot(searchQ, snap => {
+    let html = "";
+    snap.forEach(d => {
+      const u = d.data();
+      html += `
+        <div class="contact" data-add="${u.userId}">
+          <img src="${u.avatar}">
+          <div>${u.name}</div>
+        </div>
+      `;
+    });
+    box.innerHTML = html || "No users found.";
+    attachAddListeners();
   });
+};
 
-  document.querySelector(".contact[data-id='global']").onclick = () => {
-    openChat("global", "Global Chat");
-  };
+/* CLICK: Send Request */
+function attachAddListeners() {
+  document.querySelectorAll("[data-add]").forEach(e => {
+    e.onclick = async () => {
+      const uid = e.dataset.add;
+      await setDoc(doc(db, "users", uid, "requests", myId), {
+        from: myId,
+        time: Date.now()
+      });
+      alert("Friend request sent!");
+      document.getElementById("modalBG").style.display = "none";
+    };
+  });
 }
 
-await loadContacts();
+/* CLICK: Accept Request */
+function attachPendingListeners() {
+  document.querySelectorAll("[data-action='pending']").forEach(e => {
+    e.onclick = async () => {
+      const fromId = e.dataset.from;
 
-/* ----- CHAT SYSTEM ----- */
+      const u = await getDoc(doc(db, "users", fromId));
+
+      if (u.exists()) {
+        await setDoc(doc(db, "users", myId, "contacts", fromId), u.data());
+        await setDoc(doc(db, "users", fromId, "contacts", myId), {
+          userId: myId,
+          name: myName,
+          avatar: myAvatar
+        });
+
+        await setDoc(doc(db, "users", myId, "requests", fromId), {});
+      }
+    };
+  });
+}
+
+
+/* ---------- CHAT ---------- */
+
 let currentChat = "global";
+let unsubscribeMessages = null;
 
-function chatPath(chatId) {
-  return chatId === "global"
-    ? collection(db, "globalMessages")
-    : collection(db, "privateChats", chatId, "messages");
+document.querySelectorAll(".contact").forEach(c => {
+  c.onclick = () => {
+    loadChat(c.dataset.id);
+  };
+});
+
+
+function calculatePrivateRoom(friendId) {
+  return [myId, friendId].sort().join("_");
 }
 
-function openChat(chatId, name) {
+function getChatCollection(chatId) {
+  if (chatId === "global") {
+    return collection(db, "globalMessages");
+  }
+  const room = calculatePrivateRoom(chatId);
+  return collection(db, "privateChats", room, "messages");
+}
+
+
+function loadChat(chatId) {
   currentChat = chatId;
-  document.getElementById("chatHeader").innerText = name;
-  loadMessages(chatId);
-}
 
-function openPrivateChat(otherId, name) {
-  const chatId = myId < otherId ? `${myId}_${otherId}` : `${otherId}_${myId}`;
-  openChat(chatId, name);
-}
+  document.getElementById("messages").innerHTML = "";
+  document.getElementById("chatHeader").innerText =
+    chatId === "global" ? "Global Chat" : "Chat";
 
-function loadMessages(chatId) {
-  const msgBox = document.getElementById("messages");
-  msgBox.innerHTML = "";
-  document.getElementById("typingIndicator").innerHTML = "";
+  if (unsubscribeMessages) unsubscribeMessages();
 
-  const q = query(chatPath(chatId), orderBy("time"));
-  onSnapshot(q, snap => {
+  const q = query(
+    getChatCollection(chatId),
+    orderBy("time")
+  );
+
+  unsubscribeMessages = onSnapshot(q, snap => {
+    const msgBox = document.getElementById("messages");
     msgBox.innerHTML = "";
     snap.forEach(d => {
       const m = d.data();
@@ -344,78 +531,35 @@ function loadMessages(chatId) {
       div.textContent = m.text;
       msgBox.appendChild(div);
     });
+
     msgBox.scrollTop = msgBox.scrollHeight;
   });
-
-  setupTypingListener(chatId);
 }
 
-/* ----- SEND MESSAGE ----- */
+
+/* ---------- SEND MESSAGE ---------- */
+
 async function sendMessage() {
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
   if (!text) return;
 
-  await addDoc(chatPath(currentChat), {
+  await addDoc(getChatCollection(currentChat), {
     senderId: myId,
     senderName: myName,
-    text: text,
+    text,
     time: Date.now()
   });
 
   input.value = "";
-  updateTyping(false);
 }
 
 document.getElementById("sendBtn").onclick = sendMessage;
-document.getElementById("messageInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    sendMessage();
-  } else {
-    updateTyping(true);
-  }
-});
 
-/* ----- TYPING INDICATOR ----- */
-let typingTimeout;
+document.getElementById("messageInput").onkeydown = e => {
+  if (e.key === "Enter") sendMessage();
+};
 
-async function updateTyping(isTyping) {
-  await setDoc(doc(db, "typing", currentChat + "_" + myId), {
-    chatId: currentChat,
-    userId: myId,
-    name: myName,
-    typing: isTyping,
-    time: Date.now()
-  }, { merge: true });
-
-  clearTimeout(typingTimeout);
-  if (isTyping) {
-    typingTimeout = setTimeout(() => updateTyping(false), 2000);
-  }
-}
-
-function setupTypingListener(chatId) {
-  const typingDiv = document.getElementById("typingIndicator");
-  typingDiv.innerHTML = "";
-
-  onSnapshot(collection(db, "typing"), snap => {
-    let someoneTyping = false;
-    let name = "";
-
-    snap.forEach(d => {
-      const t = d.data();
-      if (t.chatId === chatId && t.userId !== myId && t.typing) {
-        someoneTyping = true;
-        name = t.name;
-      }
-    });
-
-    typingDiv.innerHTML = someoneTyping
-      ? `${name} is typing <span class="typingBubble"></span><span class="typingBubble"></span><span class="typingBubble"></span>`
-      : "";
-  });
-}
 
 </script>
 </body>
