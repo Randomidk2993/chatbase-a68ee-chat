@@ -20,7 +20,13 @@ class GifWindow:
         self.master.title("Look at this!")
         self.master.resizable(False, False)
 
-        # Disable window close button for the first 10 seconds
+        # ---- ALWAYS ON TOP ----
+        self.master.attributes('-topmost', True)
+
+        # ---- PREVENT MINIMIZE ----
+        # Bind the Unmap event (triggered when window is minimized)
+        self.master.bind('<Unmap>', self.on_minimize_attempt)
+        # Also override the window state changes
         self.master.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Load GIF frames
@@ -31,7 +37,6 @@ class GifWindow:
         for frame in ImageSequence.Iterator(img):
             frame_image = ImageTk.PhotoImage(frame.convert("RGBA"))
             self.frames.append(frame_image)
-            # Duration in milliseconds (default 100ms if missing)
             duration = frame.info.get('duration', 100)
             self.durations.append(duration)
 
@@ -39,42 +44,47 @@ class GifWindow:
         self.label = Label(self.master)
         self.label.pack()
 
-        # Start animation
         self.animate()
 
-        # Record creation time
+        # 10-second close protection
         self.start_time = time.time()
         self.can_close = False
-
-        # Schedule close permission after 10 seconds
         self.master.after(10000, self.enable_close)
 
-        # Keep track of all windows to prevent garbage collection
+        # Keep reference to avoid garbage collection
         windows.append(self)
 
     def animate(self):
-        """Update the label with the next frame."""
+        """Update label with next frame."""
         frame = self.frames[self.frame_index]
         self.label.configure(image=frame)
         self.frame_index = (self.frame_index + 1) % len(self.frames)
         delay = self.durations[self.frame_index]
         self.master.after(delay, self.animate)
 
+    def on_minimize_attempt(self, event=None):
+        """Intercept minimize and immediately restore window."""
+        # Only trigger if window is being minimized (state == 'iconic')
+        if self.master.state() == 'iconic':
+            self.master.deiconify()          # Restore from minimize
+            self.master.lift()                # Bring to front
+            self.master.attributes('-topmost', True)  # Ensure topmost
+        # If it's just an Unmap event not from minimize, do nothing else
+
     def enable_close(self):
-        """Allow the window to be closed normally."""
         self.can_close = True
+        self.master.title("Look at this! (Can close now)")
 
     def on_close(self):
-        """Handle window close attempt."""
         if self.can_close:
             self.master.destroy()
             windows.remove(self)
         else:
-            # Spawn a new window
+            # Spawn a new window when forced closed early
             new_root = tk.Toplevel()
             GifWindow(new_root)
 
-# Global list to keep references to windows
+# Global list to keep references to all windows
 windows = []
 
 if __name__ == "__main__":
