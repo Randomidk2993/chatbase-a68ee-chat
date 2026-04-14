@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 import time
 
-GIF_URL = "https://media.giphy.com/media/mWzeFtOFcFrDM22VFG/giphy.gif"
+GIF_URL = "https://giphy.com/gifs/things-bra-thechive-cz7hzNqWaIx68"
 
 def download_gif(url):
     response = requests.get(url, timeout=10)
