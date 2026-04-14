@@ -5,11 +5,9 @@ import requests
 from io import BytesIO
 import time
 
-# URL of the GIF
 GIF_URL = "https://media.giphy.com/media/mWzeFtOFcFrDM22VFG/giphy.gif"
 
 def download_gif(url):
-    """Download GIF from URL and return a BytesIO object."""
     response = requests.get(url, timeout=10)
     response.raise_for_status()
     return BytesIO(response.content)
@@ -20,16 +18,20 @@ class GifWindow:
         self.master.title("Look at this!")
         self.master.resizable(False, False)
 
+        # ---- REMOVE MINIMIZE/MAXIMIZE BUTTONS (keeps close button) ----
+        self.master.attributes('-toolwindow', True)
+
         # ---- ALWAYS ON TOP ----
         self.master.attributes('-topmost', True)
 
-        # ---- PREVENT MINIMIZE ----
-        # Bind the Unmap event (triggered when window is minimized)
-        self.master.bind('<Unmap>', self.on_minimize_attempt)
-        # Also override the window state changes
+        # ---- PREVENT MINIMIZE VIA KEYBOARD / TASKBAR ----
+        self.master.bind('<Unmap>', self.on_unmap)
+        self.master.bind('<Map>', self.on_map)
+
+        # ---- CLOSE PROTOCOL ----
         self.master.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Load GIF frames
+        # Load GIF
         self.frames = []
         self.durations = []
         gif_data = download_gif(GIF_URL)
@@ -37,8 +39,7 @@ class GifWindow:
         for frame in ImageSequence.Iterator(img):
             frame_image = ImageTk.PhotoImage(frame.convert("RGBA"))
             self.frames.append(frame_image)
-            duration = frame.info.get('duration', 100)
-            self.durations.append(duration)
+            self.durations.append(frame.info.get('duration', 100))
 
         self.frame_index = 0
         self.label = Label(self.master)
@@ -46,30 +47,46 @@ class GifWindow:
 
         self.animate()
 
-        # 10-second close protection
+        # Close protection
         self.start_time = time.time()
         self.can_close = False
         self.master.after(10000, self.enable_close)
 
-        # Keep reference to avoid garbage collection
+        # Aggressive topmost enforcement
+        self.enforce_topmost()
+
         windows.append(self)
 
     def animate(self):
-        """Update label with next frame."""
         frame = self.frames[self.frame_index]
         self.label.configure(image=frame)
         self.frame_index = (self.frame_index + 1) % len(self.frames)
-        delay = self.durations[self.frame_index]
-        self.master.after(delay, self.animate)
+        self.master.after(self.durations[self.frame_index], self.animate)
 
-    def on_minimize_attempt(self, event=None):
-        """Intercept minimize and immediately restore window."""
-        # Only trigger if window is being minimized (state == 'iconic')
+    def on_unmap(self, event=None):
+        """Called when window is hidden/minimized."""
+        # If we are being unmapped (hidden) and it's not a legitimate close
+        if not self.can_close:
+            self.master.after(10, self.restore_window)
+
+    def on_map(self, event=None):
+        """Called when window becomes visible."""
+        self.master.attributes('-topmost', True)
+        self.master.lift()
+
+    def restore_window(self):
+        """Force window back to visible and on top."""
         if self.master.state() == 'iconic':
-            self.master.deiconify()          # Restore from minimize
-            self.master.lift()                # Bring to front
-            self.master.attributes('-topmost', True)  # Ensure topmost
-        # If it's just an Unmap event not from minimize, do nothing else
+            self.master.deiconify()
+        self.master.lift()
+        self.master.attributes('-topmost', True)
+        self.master.focus_force()
+
+    def enforce_topmost(self):
+        """Reapply topmost every 500ms to combat aggressive window managers."""
+        self.master.attributes('-topmost', True)
+        self.master.lift()
+        self.master.after(500, self.enforce_topmost)
 
     def enable_close(self):
         self.can_close = True
@@ -80,11 +97,9 @@ class GifWindow:
             self.master.destroy()
             windows.remove(self)
         else:
-            # Spawn a new window when forced closed early
             new_root = tk.Toplevel()
             GifWindow(new_root)
 
-# Global list to keep references to all windows
 windows = []
 
 if __name__ == "__main__":
